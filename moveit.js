@@ -15,9 +15,9 @@ var Moveit = {
 				var y2 = el.getAttribute('y2');
 				d = Math.sqrt(Math.pow((x2-x1), 2)+Math.pow((y2-y1),2));
 			}
-			return d;	
+			return d;
 		}
-		
+
 	},
 	setupPath: function(el, length, start, end, opacity) {
 		el.style.strokeOpacity = opacity;
@@ -29,20 +29,39 @@ var Moveit = {
 		el.style.strokeDasharray = ((dash/100) * length) + ' ' + ((gap/100) * length);
 		el.style.strokeDashoffset = (offset/100) * length;
 	},
+
+	// Handle transitionEnd events for multiple browsers, return the correct transitionEnd event
+	whichTransitionEvent(){
+	  var t,
+	      el = document.createElement('fakeelement');
+
+	  var transitions = {
+	    'transition'      : 'transitionend',
+	    'OTransition'     : 'oTransitionEnd',
+	    'MozTransition'   : 'transitionend',
+	    'WebkitTransition': 'webkitTransitionEnd'
+	  }
+
+	  for (t in transitions){
+	    if (el.style[t] !== undefined){
+	      return transitions[t];
+	    }
+	  }
+	},
 	setPosition(el, options) {
 		if(el.style) {
 			var length = this.getLength(el);
 			var visibility = (options.visibility !== undefined) ? options.visibility : 1;
 			if(visibility === 0) {
-				el.style.visibility = 'hidden';	
+				el.style.visibility = 'hidden';
 			} else if(visibility === 1) {
 				el.style.visibility = 'visible';
 			} else {
 				el.style.visibility = 'visible';
 			}
-			this.setupPath(el, length, options.start, options.end, options.opacity);	
+			this.setupPath(el, length, options.start, options.end, options.opacity);
 		}
-		
+
 	},
 	put: function(el, options) {
 		if(el.length) {
@@ -52,6 +71,11 @@ var Moveit = {
 		} else {
 			this.setPosition(el, options);
 		}
+		// check options object literal for "callback" property that is a function
+		if(typeof options.callback === 'function') {
+			// if "callback" is a function, add "transitionEnd" event listener with callback
+			el.addEventListener(this.whichTransitionEvent(), options.callback);
+		}
 	},
 	anim: function(el, options) {
 		if(el.style) {
@@ -60,7 +84,7 @@ var Moveit = {
 			var opacity = (options.opacity !== undefined) ? options.opacity : 1;
 			var visibility = (options.visibility !== undefined) ? options.visibility : 1;
 			if(visibility === 0) {
-				el.style.visibility = 'hidden';	
+				el.style.visibility = 'hidden';
 			} else if(visibility === 1) {
 				el.style.visibility = 'visible';
 			} else {
